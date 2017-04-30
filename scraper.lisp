@@ -11,11 +11,15 @@
                                  :if-exists :supersede)
     (stp:serialize node (chtml:make-character-stream-sink *output-file*))))
 
+(defmacro with-predicate (symbol tag attr attr-val &body body)
+  `(flet ((,symbol (node)
+            (and (typep node 'stp:element)
+                 (equal (stp:local-name node) ,tag)
+                 (equal (stp:attribute-value node ,attr) ,attr-val))))
+     ,@body))
+
 (defun find-menu (url)
-  (flet ((menu-container-p (node)
-           (and (typep node 'stp:element)
-                (equal (stp:local-name node) "ul")
-                (equal (stp:attribute-value node "id") "menu-tutorial-menu"))))
+  (with-predicate menu-container-p "ul" "id" "menu-tutorial-menu"
     (let* ((response  (drakma:http-request url))
            (document  (chtml:parse response (stp:make-builder))))
       (first (stp:filter-recursively #'menu-container-p document)))))
@@ -24,10 +28,7 @@
   (serialize-to-file "out/menu.html" menu-node))
 
 (defun parse-links-in-menu (menu-node)
-  (flet ((sub-menu-p (node)
-           (and (typep node 'stp:element)
-                (equal (stp:local-name node) "ul")
-                (equal (stp:attribute-value node "class") "sub-menu"))))
+  (with-predicate sub-menu-p "ul" "class" "sub-menu"
     (let* ((sub-menus (stp:filter-recursively #'sub-menu-p menu-node))
            (menu-list (alexandria:flatten (mapcar #'stp:list-children sub-menus))))
       (mapcar (lambda (li)
@@ -35,10 +36,7 @@
               menu-list))))
 
 (defun scrape-content (link)
-  (flet ((contentp (node)
-           (and (typep node 'stp:element)
-                (equal (stp:local-name node) "div")
-                (equal (stp:attribute-value node "class") "entry-content"))))
+  (with-predicate contentp "div" "class" "entry-content"
     (let* ((filename (remove #\/ (subseq link (length *base-url*))))
            (page     (drakma:http-request link))
            (document (chtml:parse page (stp:make-builder)))
