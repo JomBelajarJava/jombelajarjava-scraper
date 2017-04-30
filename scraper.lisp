@@ -5,6 +5,20 @@
 
 (defparameter *base-url* "http://www.jombelajarjava.com")
 
+(defun menu-container-p (node)
+  (and (typep node 'stp:element)
+       (equal (stp:local-name node) "div")
+       (equal (stp:attribute-value node "class") "menu-tutorial-menu-container")))
+
+(defun scrape-menu ()
+  (let* ((homepage  (drakma:http-request *base-url*))
+         (document  (chtml:parse homepage (stp:make-builder)))
+         (menu      (first (stp:filter-recursively #'menu-container-p document))))
+    (with-open-file (*output-file* "out/menu.html"
+                                   :direction :output
+                                   :if-exists :supersede)
+      (stp:serialize menu (chtml:make-character-stream-sink *output-file*)))))
+
 (defun sub-menu-p (node)
   (and (typep node 'stp:element)
        (equal (stp:local-name node) "ul")
