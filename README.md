@@ -1,6 +1,6 @@
 # scraper
 
-A scraper for Jom Belajar Java wordpress blog
+A scraper for Jom Belajar Java wordpress blog.
 
 ### Usage
 
@@ -13,9 +13,7 @@ $ sbcl --load scraper.lisp
 Scrape:
 
 ```
-$ (parse-links-in-menu)
+$ (scrape-all-content)
 ```
 
-### TODO
-
-Scrape content
+The output will be inside `out` folder.
