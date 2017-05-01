@@ -13,7 +13,7 @@ $ sbcl --load scraper.lisp
 Scrape:
 
 ```
-$ (scrape-all-content)
+$ (scrape-all)
 ```
 
 The output will be inside `out` folder.
