@@ -6,10 +6,10 @@
 (defparameter *base-url* "http://www.jombelajarjava.com")
 
 (defun serialize-to-file (file node)
-  (with-open-file (*output-file* (ensure-directories-exist file)
-                                 :direction :output
-                                 :if-exists :supersede)
-    (stp:serialize node (chtml:make-character-stream-sink *output-file*))))
+  (with-open-file (output-file (ensure-directories-exist file)
+                               :direction :output
+                               :if-exists :supersede)
+    (stp:serialize node (chtml:make-character-stream-sink output-file))))
 
 (defmacro with-predicate (symbol tag attr attr-val &body body)
   `(flet ((,symbol (node)
