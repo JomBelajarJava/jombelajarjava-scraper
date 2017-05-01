@@ -35,12 +35,34 @@
                 (stp:attribute-value (stp:first-child li) "href"))
               menu-list))))
 
+(defun save-image (url)
+  (let ((filename (concatenate 'string
+                               (reverse (loop for x across (reverse url)
+                                              while (not (equal x #\/))
+                                              collect x))))
+        (image    (drakma:http-request url)))
+    (with-open-file (output-file (ensure-directories-exist
+                                  (format nil "out/images/~a" filename))
+                                 :direction :output
+                                 :if-exists :supersede
+                                 :element-type '(unsigned-byte 8))
+      (write-sequence image output-file))))
+
 (defun scrape-content (link)
   (with-predicate contentp "div" "class" "entry-content"
-    (let* ((filename (remove #\/ (subseq link (length *base-url*))))
-           (page     (drakma:http-request link))
-           (document (chtml:parse page (stp:make-builder)))
-           (content  (first (stp:filter-recursively #'contentp document))))
+    (let* ((filename   (remove #\/ (subseq link (length *base-url*))))
+           (page       (drakma:http-request link))
+           (document   (chtml:parse page (stp:make-builder)))
+           (content    (first (stp:filter-recursively #'contentp document)))
+           (images     (stp:filter-recursively
+                        (lambda (node)
+                          (and (typep node 'stp:element)
+                               (equal (stp:local-name node) "img")))
+                        content))
+           (images-url (mapcar (lambda (img)
+                                 (stp:attribute-value img "src"))
+                               images)))
+      (mapcar #'save-image images-url)
       (serialize-to-file (format nil "out/~a.html" filename) content))))
 
 (defun scrape-all-contents (links)
