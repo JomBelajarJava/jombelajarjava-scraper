@@ -11,15 +11,21 @@
                                :if-exists :supersede)
     (stp:serialize node (chtml:make-character-stream-sink output-file))))
 
-(defmacro with-predicate (symbol tag attr attr-val &body body)
-  `(flet ((,symbol (node)
-            (and (typep node 'stp:element)
-                 (equal (stp:local-name node) ,tag)
-                 (equal (stp:attribute-value node ,attr) ,attr-val))))
+(defun define-check (symbol-and-args)
+  (destructuring-bind (symbol tag &optional attr attr-val) symbol-and-args
+    `(,symbol (node)
+              (and (typep node 'stp:element)
+                   (equal (stp:local-name node) ,tag)
+                   ,(if (and attr attr-val)
+                        `(equal (stp:attribute-value node ,attr) ,attr-val)
+                        t)))))
+
+(defmacro with-predicate (list-of-symbol-and-args &body body)
+  `(flet ,(mapcar #'define-check list-of-symbol-and-args)
      ,@body))
 
 (defun find-menu (url)
-  (with-predicate menu-container-p "ul" "id" "menu-tutorial-menu"
+  (with-predicate ((menu-container-p "ul" "id" "menu-tutorial-menu"))
     (let* ((response  (drakma:http-request url))
            (document  (chtml:parse response (stp:make-builder))))
       (first (stp:filter-recursively #'menu-container-p document)))))
@@ -28,7 +34,7 @@
   (serialize-to-file "out/menu.html" menu-node))
 
 (defun parse-links-in-menu (menu-node)
-  (with-predicate sub-menu-p "ul" "class" "sub-menu"
+  (with-predicate ((sub-menu-p "ul" "class" "sub-menu"))
     (let* ((sub-menus (stp:filter-recursively #'sub-menu-p menu-node))
            (menu-list (alexandria:flatten (mapcar #'stp:list-children sub-menus))))
       (mapcar (lambda (li)
@@ -49,16 +55,13 @@
       (write-sequence image output-file))))
 
 (defun scrape-content (link)
-  (with-predicate contentp "div" "class" "entry-content"
+  (with-predicate ((contentp "div" "class" "entry-content")
+                   (imagep   "img"))
     (let* ((filename   (remove #\/ (subseq link (length *base-url*))))
            (page       (drakma:http-request link))
            (document   (chtml:parse page (stp:make-builder)))
            (content    (first (stp:filter-recursively #'contentp document)))
-           (images     (stp:filter-recursively
-                        (lambda (node)
-                          (and (typep node 'stp:element)
-                               (equal (stp:local-name node) "img")))
-                        content))
+           (images     (stp:filter-recursively #'imagep content))
            (images-url (mapcar (lambda (img)
                                  (stp:attribute-value img "src"))
                                images)))
