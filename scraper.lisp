@@ -54,6 +54,10 @@
                                  :element-type '(unsigned-byte 8))
       (write-sequence image output-file))))
 
+(defun save-all-images (urls)
+  (dolist (url urls)
+    (save-image url)))
+
 (defun scrape-content (link)
   (with-predicate ((contentp "div" "class" "entry-content")
                    (imagep   "img"))
@@ -62,11 +66,11 @@
            (document   (chtml:parse page (stp:make-builder)))
            (content    (first (stp:filter-recursively #'contentp document)))
            (images     (stp:filter-recursively #'imagep content))
-           (images-url (mapcar (lambda (img)
+           (image-urls (mapcar (lambda (img)
                                  (stp:attribute-value img "src"))
                                images)))
-      (mapcar #'save-image images-url)
-      (serialize-to-file (format nil "out/~a.html" filename) content))))
+      (serialize-to-file (format nil "out/~a.html" filename) content)
+      (save-all-images image-urls))))
 
 (defun scrape-all-contents (links)
   (dolist (link links)
