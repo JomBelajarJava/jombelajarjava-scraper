@@ -1,6 +1,6 @@
 # scraper
 
-A scraper for Jom Belajar Java wordpress blog.
+A scraper for Jom Belajar Java wordpress blog. The scraped files can be seen [here](https://github.com/JomBelajarJava/old-content).
 
 ### Usage
 
