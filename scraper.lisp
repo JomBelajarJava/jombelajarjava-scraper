@@ -2,6 +2,7 @@
 (ql:quickload :drakma)
 (ql:quickload :closure-html)
 (ql:quickload :cxml-stp)
+(ql:quickload :quri)
 
 (defparameter *base-url* "http://www.jombelajarjava.com")
 
@@ -42,11 +43,12 @@
               menu-list))))
 
 (defun save-image (url)
-  (let ((filename (concatenate 'string
-                               (reverse (loop for x across (reverse url)
-                                              while (not (equal x #\/))
-                                              collect x))))
-        (image    (drakma:http-request url)))
+  (let* ((image-name (concatenate 'string
+                                  (reverse (loop for x across (reverse url)
+                                                 while (not (equal x #\/))
+                                                 collect x))))
+         (filename   (quri:url-decode (quri:url-decode (quri:url-decode image-name))))
+         (image      (drakma:http-request url)))
     (with-open-file (output-file (ensure-directories-exist
                                   (format nil "out/images/~a" filename))
                                  :direction :output
