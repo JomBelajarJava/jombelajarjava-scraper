@@ -87,6 +87,7 @@
 (defun scrape-all-contents (links)
   "Scrape the content of all pages from a list of links."
   (dolist (link links)
+    (format t "Scraping ~a...~%" link)
     (scrape-content link)))
 
 (defun scrape-all ()
