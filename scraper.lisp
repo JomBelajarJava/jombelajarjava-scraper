@@ -90,7 +90,7 @@
     (scrape-content link)))
 
 (defun scrape-all ()
-  "Scrape everythin."
+  "Scrape everything."
   (let* ((menu  (find-menu *base-url*))
          (links (parse-links-in-menu menu)))
     (scrape-menu menu)
