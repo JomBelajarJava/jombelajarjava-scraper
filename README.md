@@ -10,6 +10,12 @@ Load scraper:
 $ sbcl --load scraper.lisp
 ```
 
+or
+
+```
+$ sbcl --load scraper-html5.lisp
+```
+
 Scrape:
 
 ```
